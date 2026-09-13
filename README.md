@@ -76,8 +76,8 @@ realtim/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
-cd YOUR_REPOSITORY_NAME
+git clone https://github.com/gitgaurav-web/realtime-chat.git
+cd realtime-chat
 ```
 
 ### 2. Run Locally
@@ -137,7 +137,7 @@ In your Firebase Console under **Realtime Database > Rules**, configure:
 1. Push this repository to GitHub.
 2. In your repository, navigate to **Settings > Pages**.
 3. Under **Branch**, select `main` and folder `/ (root)`.
-4. Click **Save**. Your site will be live at `https://YOUR_USERNAME.github.io/YOUR_REPOSITORY_NAME/`.
+4. Click **Save**. Your site will be live at `https://gitgaurav-web.github.io/realtime-chat/`.
 
 ---
 
@@ -156,4 +156,4 @@ Distributed under the MIT License.
 
 ---
 
-*Made with ❤️ by [Gaurav Kumar](https://github.com/)*
+*Made with ❤️ by [Gaurav Kumar](https://github.com/gitgaurav-web)*
