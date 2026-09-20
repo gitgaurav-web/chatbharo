@@ -1,4 +1,8 @@
-# 💬 Modern Realtime Chat Web Application
+<p align="center">
+  <img src="./assets/logo.png" alt="ChatBharo Logo" width="160" />
+</p>
+
+# 💬 ChatBharo - Modern Realtime Chat Web Application
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Blogspot-ff5722?style=for-the-badge&logo=blogger&logoColor=white)](https://realtimexyz.blogspot.com/)
 [![GitHub](https://img.shields.io/badge/GitHub-gitgaurav--web-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/gitgaurav-web/realtime-chat)
