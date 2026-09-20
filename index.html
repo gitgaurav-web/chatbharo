@@ -2118,6 +2118,26 @@
             window.closeImageViewer();
             window.closeActiveUsersModal();
         }
+
+        if (e.key === "Enter" && !e.shiftKey) {
+            const chatPage = document.getElementById("chatPage");
+            const imageInput = document.getElementById("imageInput");
+            const isChatActive = chatPage && chatPage.style.display === "flex";
+
+            // If active element is messageInput, its own keydown handler already handles it
+            if (document.activeElement === document.getElementById("messageInput")) {
+                return;
+            }
+
+            // If photo(s) are selected in active chat, pressing Enter sends them immediately
+            if (isChatActive && imageInput && imageInput.files && imageInput.files.length > 0) {
+                const viewerModal = document.getElementById("imageViewerModal");
+                if (viewerModal && viewerModal.style.display === "flex") return;
+
+                e.preventDefault();
+                window.sendMessage();
+            }
+        }
     });
 
     initEmojiPicker();
@@ -2606,6 +2626,8 @@
             const files = document.getElementById("imageInput").files;
             const previewBox = document.getElementById("previewBox");
             const container = document.getElementById("previewThumbsContainer");
+            const countText = document.getElementById("previewCountText");
+            const msgInput = document.getElementById("messageInput");
             container.innerHTML = "";
 
             if (files.length === 0) {
@@ -2613,13 +2635,20 @@
                 return;
             }
             previewBox.style.display = "flex";
-            document.getElementById("previewCountText").innerText = `${files.length} File(s) Selected`;
+            if (countText) {
+                countText.innerHTML = `<strong>${files.length} Photo${files.length > 1 ? 's' : ''}</strong> Selected <span style="font-size:11px; opacity:0.85; margin-left:4px;">• Press Enter ↵ to Send</span>`;
+            }
 
             for (let i = 0; i < files.length; i++) {
                 const imgElement = document.createElement("img");
                 imgElement.className = "preview-thumb";
                 imgElement.src = URL.createObjectURL(files[i]);
                 container.appendChild(imgElement);
+            }
+
+            // Auto-focus message input so pressing Enter immediately sends the photo(s)
+            if (msgInput) {
+                msgInput.focus();
             }
         };
 
@@ -2686,6 +2715,7 @@
         let files = fileInput.files;
         let sendBtn = document.getElementById("sendBtn");
 
+        if (sendBtn.disabled) return;
         if (text.trim() === "" && files.length === 0) return;
 
         sendBtn.disabled = true;
