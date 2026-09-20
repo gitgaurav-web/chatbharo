@@ -1,6 +1,7 @@
 # 💬 Modern Realtime Chat Room
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Blogspot-ff5722?style=for-the-badge&logo=blogger&logoColor=white)](https://realtimexyz.blogspot.com/)
+[![GitHub](https://img.shields.io/badge/GitHub-gitgaurav--web-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/gitgaurav-web/realtime-chat)
 [![Firebase](https://img.shields.io/badge/Firebase-Realtime_Database-FFA611?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com/)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/)
@@ -9,30 +10,43 @@
 
 A modern, fast, and feature-packed **Realtime Chat Web Application** built with pure Vanilla HTML5, CSS3, JavaScript (ES Modules), and **Firebase Realtime Database**. Designed mobile-first with an elegant dark mode UI.
 
-🌐 **Live Demo:** [https://realtimexyz.blogspot.com/](https://realtimexyz.blogspot.com/)
+🌐 **Live Demo on Blogspot:** [https://realtimexyz.blogspot.com/](https://realtimexyz.blogspot.com/)
 
 ---
 
 ## ✨ Features
 
-### ⚡ Realtime Messaging & Room System
-- **Custom or Random Room Codes:** Create a new room with a custom code or generate a random 6-character room key.
-- **Instant Messaging:** Push and receive text messages instantly via Firebase Realtime Database (`onChildAdded`, `onChildChanged`).
-- **Soft Message Deletion:** Message owners can delete their messages, replacing the bubble with a deletion notice (`🚫 You deleted this message`).
+### 🎙️ Voice Notes (Audio Messaging)
+- **Built-in Audio Recorder:** Record audio notes directly from the browser with live recording timer (`0:05`), pulsing red indicator, and cancel/send controls.
+- **Custom Audio Player Bubble:** Sleek embedded player with Play/Pause, dynamic waveform track progress, and timestamp duration.
 
-### 🛡️ Security & Performance
-- **Stored XSS Prevention:** Complete HTML escaping (`&`, `<`, `>`, `"`, `'`) for all usernames, message contents, reply targets, and author names.
-- **Optimized Initial Load (`limitToLast(50)`):** Only the latest 50 messages load on entering a room, preventing device memory spikes and app freezing in large chat histories.
-- **Safe DOM Image Viewer:** Opens images in a separate view without insecure `document.write`.
+### ❤️ Message Emoji Reactions
+- **Quick Reaction Bar:** Instant emoji reaction row (`❤️`, `👍`, `😂`, `🔥`, `😮`, `😢`) via message context menu.
+- **Live Reaction Badges:** Reaction counters rendered directly below message bubbles (`[❤️ 2]`, `[🔥 1]`).
+- **Interactive Toggle:** Click any badge to toggle your reaction in real time across the room.
 
-### 👥 Live Presence & Typing Indicators
-- **Active Member Counter:** Realtime count of active participants in each room with automatic cleanup on disconnection (`onDisconnect`).
-- **Typing Status Broadcast:** Live `User is typing...` indicator with auto-debounced timeout.
+### 👥 Live Presence & Active Users Modal
+- **"Who is Online" Bottom-Sheet:** Click `🟢 Active: X` in the header to view a complete list of online members with avatars and `(You)` indicator.
+- **Auto-Cleanup on Disconnect:** Uses Firebase `onDisconnect()` to remove inactive members automatically.
+- **Live Typing Broadcast:** Live `User is typing...` indicator with auto-debounced timeout.
+
+### 📶 Real-time Connection State & Offline Banner
+- Listens to Firebase `.info/connected` status.
+- Shows an animated warning banner (`⚠️ Connection lost. Reconnecting to server...`) if internet drops, and hides it upon reconnection.
+
+### 🔗 1-Click Share & Smart Linkify
+- **Room Share Button:** Click `🔗 Share` in the header to copy `https://realtimexyz.blogspot.com/?room=XYZ` or trigger native mobile share sheets.
+- **Auto-Fill Room URL:** Visiting a link with `?room=XYZ` automatically pre-fills the room code.
+- **Auto-Linkify URLs:** Converts links in chat messages into secure, clickable links (`target="_blank" rel="noopener noreferrer"`).
+
+### 🔔 Sweet Notification Chime
+- In-browser synthesized audio chime (Web Audio API) for incoming messages.
+- Header toggle button (`🔔` / `🔕`) to mute/unmute audio notifications anytime.
 
 ### 💬 WhatsApp-Style Reply & Gestures
 - **Swipe-to-Reply:** Touch swipe right gesture on mobile to quickly quote and reply to any message.
 - **Double-Click to Reply:** Quick double-click shortcut on desktop and touch devices.
-- **Interactive Quoted Messages:** Clicking on a quoted reply smoothly scrolls directly to the original message and highlights it with a purple pulse animation.
+- **Interactive Quoted Messages:** Clicking a quoted reply smoothly scrolls to the original message with a purple pulse highlight.
 
 ### 📷 Client-Side Image Compression & Multi-Upload
 - **HTML5 Canvas Compression:** Images are compressed on the client side (max 1280x720, 70% JPEG quality) before uploading to conserve bandwidth.
@@ -43,9 +57,15 @@ A modern, fast, and feature-packed **Realtime Chat Web Application** built with 
 - **Floating Scroll-to-Bottom Button:** Appears automatically when scrolled up.
 - **Unread Badge Counter:** Displays the number of unread incoming messages when viewing earlier chat history.
 
+### 📜 "Load Older Messages" Pagination
+- Loads the latest 50 messages initially to ensure blazing-fast load times and zero lag.
+- A `📜 Load Older Messages` button allows users to fetch earlier history on demand without losing scroll position.
+
+### 🛡️ Built-in XSS Security Sanitization
+- Complete HTML escaping (`&`, `<`, `>`, `"`, `'`) for all usernames, message contents, reply targets, and author names to prevent Stored XSS attacks.
+
 ### 😀 Integrated Searchable Emoji Picker
-- Built-in library of 100+ categorized emojis.
-- Realtime search filter by keywords and tags (e.g., *happy*, *love*, *fire*, *party*).
+- Built-in library of 100+ categorized emojis with keyword tag search filter.
 
 ---
 
@@ -53,8 +73,8 @@ A modern, fast, and feature-packed **Realtime Chat Web Application** built with 
 
 | Component | Technology |
 | :--- | :--- |
-| **Frontend UI** | HTML5, CSS3 (Mobile-first, Flexbox, CSS Grid) |
-| **Client Scripting** | Vanilla JavaScript (ES Modules, Canvas API, Touch API) |
+| **Frontend UI** | HTML5, CSS3 (Mobile-first, Flexbox, CSS Grid, Glassmorphism) |
+| **Client Scripting** | Vanilla JavaScript (ES Modules, MediaRecorder API, Web Audio API, Canvas API) |
 | **Backend / Database** | Firebase Realtime Database (v12.6.0 Modular SDK) |
 | **Icons & Design** | Inline SVG & Unicode Emojis |
 
@@ -134,20 +154,9 @@ In your Firebase Console under **Realtime Database > Rules**, configure:
 4. Click **Save (💾)**. Your chat room will be live at your `.blogspot.com` address over HTTPS!
 
 ### Option 2: GitHub Pages (Free 1-Click Hosting)
-1. Push this repository to GitHub.
-2. In your repository, navigate to **Settings > Pages**.
-3. Under **Branch**, select `main` and folder `/ (root)`.
-4. Click **Save**. Your site will be live at `https://gitgaurav-web.github.io/realtime-chat/`.
-
----
-
-## 🤝 Contributing
-Contributions, suggestions, and feature requests are welcome!
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. In your GitHub repository [gitgaurav-web/realtime-chat](https://github.com/gitgaurav-web/realtime-chat), navigate to **Settings > Pages**.
+2. Under **Branch**, select `main` and folder `/ (root)`.
+3. Click **Save**. Your site will be live at `https://gitgaurav-web.github.io/realtime-chat/`.
 
 ---
 
