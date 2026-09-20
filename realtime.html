@@ -1135,6 +1135,97 @@
             font-weight: 500;
         }
 
+
+        /* DOCUMENT UPLOAD BUTTON */
+        .doc-upload-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #111c2d;
+            border: 1px solid #1d2d44;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: #a5b4fc;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .doc-upload-btn:hover {
+            background: #19273f;
+            color: white;
+        }
+        #docFileInput {
+            display: none;
+        }
+
+        /* FILE ATTACHMENT CARD IN CHAT */
+        .file-msg-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 10px 14px;
+            border-radius: 16px;
+            min-width: 220px;
+            max-width: 100%;
+            margin-top: 4px;
+        }
+        .me .file-msg-card {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+        .file-icon-box {
+            font-size: 26px;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .file-info-box {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+        .file-name-text {
+            font-size: 13px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: white;
+        }
+        .file-meta-text {
+            font-size: 11px;
+            opacity: 0.8;
+            color: #cbd5e1;
+        }
+        .file-download-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #7b2ff7;
+            color: white;
+            font-size: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.15s, background 0.2s;
+        }
+        .me .file-download-btn {
+            background: #ffffff;
+            color: #7b2ff7;
+        }
+        .file-download-btn:active {
+            transform: scale(0.9);
+        }
+
     </style>
 </head>
 <body>
@@ -1214,9 +1305,13 @@
             </div>
 
             <div class="footer">
-                <label class="upload" id="uploadLabel">
+                <label class="upload" id="uploadLabel" title="Send Photo">
                     📷
                     <input type="file" id="imageInput" accept="image/*" multiple>
+                </label>
+                <label class="doc-upload-btn" id="docUploadLabel" title="Send Document (Max 20MB)">
+                    📎
+                    <input type="file" id="docFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z,.csv,.json">
                 </label>
                 <button type="button" class="mic-btn" id="micBtn" onclick="toggleVoiceRecording()" title="Record Voice Note">🎙️</button>
                 <textarea id="messageInput" placeholder="Message" rows="1"></textarea>
@@ -1320,6 +1415,41 @@
     let oldestMessageKey = null;
     let initialBatchLoaded = false;
     let initialCount = 0;
+
+    
+    /* FILE ATTACHMENT HELPERS & 20MB SYSTEM */
+    function formatBytes(bytes) {
+        if (!bytes || bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    }
+
+    function getFileIcon(fileName) {
+        if (!fileName) return "📁";
+        const ext = fileName.split(".").pop().toLowerCase();
+        if (ext === "pdf") return "📄";
+        if (["doc", "docx"].includes(ext)) return "📑";
+        if (["xls", "xlsx", "csv"].includes(ext)) return "📊";
+        if (["ppt", "pptx"].includes(ext)) return "📽️";
+        if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return "📦";
+        if (["txt", "md", "json", "js", "py", "html", "css"].includes(ext)) return "📝";
+        return "📎";
+    }
+
+    window.downloadAttachment = (fileData, fileName) => {
+        try {
+            const a = document.createElement("a");
+            a.href = fileData;
+            a.download = fileName || "attachment";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } catch(e) {
+            window.open(fileData, "_blank");
+        }
+    };
 
     /* VOICE RECORDING LOGIC */
     let mediaRecorder = null;
@@ -2279,6 +2409,15 @@
                         <div class="audio-time-label">${safe(msg.duration || "Voice Note")}</div>
                     </div>
                 </div>` : ""}
+                ${msg.fileData ? `
+                <div class="file-msg-card">
+                    <div class="file-icon-box">${getFileIcon(msg.fileName)}</div>
+                    <div class="file-info-box">
+                        <div class="file-name-text" title="${safe(msg.fileName)}">${safe(msg.fileName)}</div>
+                        <div class="file-meta-text">${safe(msg.fileSize || "")} • Document</div>
+                    </div>
+                    <button class="file-download-btn" onclick="window.downloadAttachment('${msg.fileData}', '${safe(msg.fileName)}')" title="Download File">⬇</button>
+                </div>` : ""}
                 ${renderReactionsHTML(msg.reactions, dataKey)}
             `;
         }
@@ -2391,6 +2530,52 @@
         const msgInputEl = document.getElementById("messageInput");
         msgInputEl.addEventListener("input", autoResizeTextarea);
         autoResizeTextarea();
+
+        document.getElementById("docFileInput").onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Strict 20 MB size limit
+            const maxLimit = 20 * 1024 * 1024; // 20 MB
+            if (file.size > maxLimit) {
+                alert(`File size exceeds 20 MB limit! Selected: ${formatBytes(file.size)}`);
+                e.target.value = "";
+                return;
+            }
+
+            const sendBtn = document.getElementById("sendBtn");
+            const oldSendText = sendBtn.innerText;
+            sendBtn.innerText = "⏳";
+            sendBtn.disabled = true;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const base64Data = event.target.result;
+                const roomRef = ref(db, "rooms/" + currentRoom + "/messages");
+                let replyPayload = activeReplyData ? { name: activeReplyData.name, text: activeReplyData.text, key: activeReplyData.key } : null;
+
+                try {
+                    await push(roomRef, {
+                        name: username,
+                        text: "",
+                        fileData: base64Data,
+                        fileName: file.name,
+                        fileSize: formatBytes(file.size),
+                        time: getTime(),
+                        replyTo: replyPayload,
+                        isDeleted: false,
+                        deletedBy: ""
+                    });
+                    cancelReply();
+                } catch(err) {
+                    alert("Failed to send document: " + err.message);
+                }
+                sendBtn.innerText = oldSendText;
+                sendBtn.disabled = false;
+                e.target.value = "";
+            };
+            reader.readAsDataURL(file);
+        };
 
         document.getElementById("imageInput").onchange = () => {
             const files = document.getElementById("imageInput").files;
