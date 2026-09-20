@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>Modern Chat Rooms</title>
     <style>
         /* RESET */
@@ -831,6 +831,62 @@
             background: #18273d;
         }
 
+        /* FLOATING TOAST NOTIFICATION */
+        #toastBox {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-25px);
+            background: rgba(13, 27, 42, 0.95);
+            color: white;
+            padding: 10px 22px;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 9999999;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #toastBox.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* CUSTOM MODERN SCROLLBAR */
+        #messages::-webkit-scrollbar, .active-users-list::-webkit-scrollbar, .emoji-grid::-webkit-scrollbar {
+            width: 5px;
+        }
+        #messages::-webkit-scrollbar-track, .active-users-list::-webkit-scrollbar-track, .emoji-grid::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #messages::-webkit-scrollbar-thumb, .active-users-list::-webkit-scrollbar-thumb, .emoji-grid::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+        }
+        #messages::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* HARDWARE ACCELERATION & TOUCH POLISH */
+        .msg-wrap {
+            will-change: transform;
+        }
+        .msg {
+            contain: content;
+        }
+        .text {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
         /* SMALL MOBILE RESPONSIBILITY */
         @media (max-width: 480px) {
             .mobile-frame {
@@ -1318,18 +1374,19 @@
 </head>
 <body>
 
+<div id="toastBox">✓ Notification</div>
 <div class="mobile-frame">
     <div id="offlineBanner">⚠️ Connection lost. Reconnecting to server...</div>
 
     <div id="loginPage">
         <div class="login-box">
             <div class="logo">MODERN CHAT</div>
-            <input type="text" id="username" placeholder="Your Name">
-            <input type="text" id="roomName" placeholder="Room Name">
-            <input type="text" id="customRoomCode" placeholder="Custom Room Code">
+            <input type="text" id="username" placeholder="Your Name" onkeydown="if(event.key==='Enter') document.getElementById('roomName').focus()">
+            <input type="text" id="roomName" placeholder="Room Name" onkeydown="if(event.key==='Enter') createRoom()">
+            <input type="text" id="customRoomCode" placeholder="Custom Room Code" onkeydown="if(event.key==='Enter') createRoom()">
             <button onclick="createRoom()">Create Room</button>
             <div class="or">OR</div>
-            <input type="text" id="roomCode" placeholder="Enter Room Code">
+            <input type="text" id="roomCode" placeholder="Enter Room Code" onkeydown="if(event.key==='Enter') joinRoom()">
             <button onclick="joinRoom()">Join Room</button>
         </div>
     </div>
@@ -1443,7 +1500,7 @@
 
 <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getDatabase, ref, push, set, get, onChildAdded, onChildChanged, onValue, remove, onDisconnect, query, limitToLast, endBefore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
+    import { getDatabase, ref, push, set, get, update, onChildAdded, onChildChanged, onValue, remove, onDisconnect, query, limitToLast, endBefore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
     /* FIREBASE CONFIGURATION */
     const firebaseConfig = {
@@ -1848,23 +1905,40 @@
         } catch (e) {}
     });
 
+    /* SMOOTH FLOATING TOAST SYSTEM */
+    let toastTimeout = null;
+    window.showToast = (message, icon = "ℹ️") => {
+        const box = document.getElementById("toastBox");
+        if (!box) return;
+        box.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+        box.classList.add("show");
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            box.classList.remove("show");
+        }, 2600);
+    };
+
+    /* HARDWARE EFFICIENT REUSABLE AUDIO CONTEXT */
+    let sharedAudioCtx = null;
     function playNotificationSound() {
         if (!soundEnabled) return;
         try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContext) return;
-            const ctx = new AudioContext();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return;
+            if (!sharedAudioCtx) sharedAudioCtx = new AudioContextClass();
+            if (sharedAudioCtx.state === "suspended") sharedAudioCtx.resume();
+
+            const osc = sharedAudioCtx.createOscillator();
+            const gain = sharedAudioCtx.createGain();
             osc.type = "sine";
-            osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.12, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+            osc.frequency.setValueAtTime(587.33, sharedAudioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(880, sharedAudioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.12, sharedAudioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, sharedAudioCtx.currentTime + 0.3);
             osc.connect(gain);
-            gain.connect(ctx.destination);
+            gain.connect(sharedAudioCtx.destination);
             osc.start();
-            osc.stop(ctx.currentTime + 0.3);
+            osc.stop(sharedAudioCtx.currentTime + 0.3);
         } catch (e) {}
     }
 
@@ -2219,20 +2293,32 @@
     function setupSwipeToReply(rowElement, msgSender, msgText, msgKey, isDeleted) {
         if (isDeleted) return;
         let startX = 0;
+        let startY = 0;
         let currentX = 0;
         let isSwiping = false;
+        let isVerticalScroll = false;
 
         rowElement.addEventListener('touchstart', (e) => {
             startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
             isSwiping = true;
+            isVerticalScroll = false;
         }, { passive: true });
 
         rowElement.addEventListener('touchmove', (e) => {
-            if (!isSwiping) return;
+            if (!isSwiping || isVerticalScroll) return;
             currentX = e.touches[0].clientX;
+            let currentY = e.touches[0].clientY;
             let diffX = currentX - startX;
+            let diffY = currentY - startY;
 
-            if (diffX > 0) {
+            // If vertical movement dominates, cancel swipe so scrolling is buttery smooth
+            if (Math.abs(diffY) > Math.abs(diffX)) {
+                isVerticalScroll = true;
+                return;
+            }
+
+            if (diffX > 10) {
                 if (diffX > 70) diffX = 70;
                 rowElement.style.transform = `translateX(${diffX}px)`;
                 const indicator = rowElement.querySelector('.swipe-indicator');
@@ -2242,7 +2328,7 @@
             }
         }, { passive: true });
 
-        rowElement.addEventListener('touchend', () => {
+        const finishSwipe = () => {
             if (!isSwiping) return;
             isSwiping = false;
             let finalDiffX = currentX - startX;
@@ -2251,12 +2337,17 @@
             const indicator = rowElement.querySelector('.swipe-indicator');
             if (indicator) indicator.style.opacity = "0";
 
-            if (finalDiffX > 45) {
+            if (finalDiffX > 45 && !isVerticalScroll) {
                 window.initiateReply(msgSender, msgText, msgKey, isDeleted);
             }
             startX = 0;
+            startY = 0;
             currentX = 0;
-        });
+            isVerticalScroll = false;
+        };
+
+        rowElement.addEventListener('touchend', finishSwipe);
+        rowElement.addEventListener('touchcancel', finishSwipe);
     }
 
     function setupTypingIndicator() {
@@ -2295,10 +2386,13 @@
         });
     }
 
+    let activePreviewUrls = [];
     window.clearSelectedImages = () => {
         document.getElementById("imageInput").value = "";
         const previewBox = document.getElementById("previewBox");
         document.getElementById("previewThumbsContainer").innerHTML = "";
+        activePreviewUrls.forEach(url => URL.revokeObjectURL(url));
+        activePreviewUrls = [];
         previewBox.style.display = "none";
     };
 
@@ -2357,13 +2451,13 @@
             let code = customCode || Math.random().toString(36).substring(2, 8);
 
             if (username === "" || room === "") {
-                alert("Fill all fields");
+                window.showToast("Please fill all fields", "⚠️");
                 return;
             }
 
             const ex = await get(ref(db, "rooms/" + code + "/info"));
             if (ex.exists()) {
-                alert("Code already used");
+                window.showToast("Room code already in use", "⚠️");
                 return;
             }
 
@@ -2379,7 +2473,7 @@
             let code = document.getElementById("roomCode").value.trim();
 
             if (username === "" || code === "") {
-                alert("Fill all fields");
+                window.showToast("Please fill all fields", "⚠️");
                 return;
             }
 
@@ -2388,7 +2482,7 @@
                 try { localStorage.setItem("chat_username", username); } catch(e) {}
                 openChat(code, snap.val().room);
             } else {
-                alert("Room not found");
+                window.showToast("Room code not found", "❌");
             }
         } catch (error) { alert(error.message); }
     };
@@ -2485,11 +2579,31 @@
                 showMenu(bubble);
             };
 
-            let timer;
+            let menuTimer = null;
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let hasMoved = false;
+
             bubble.addEventListener("touchstart", (e) => {
-                timer = setTimeout(() => { showMenu(bubble); }, 600);
+                hasMoved = false;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                menuTimer = setTimeout(() => {
+                    if (!hasMoved) showMenu(bubble);
+                }, 500);
             }, { passive: true });
-            bubble.addEventListener("touchend", () => { clearTimeout(timer); });
+
+            bubble.addEventListener("touchmove", (e) => {
+                let dx = Math.abs(e.touches[0].clientX - touchStartX);
+                let dy = Math.abs(e.touches[0].clientY - touchStartY);
+                if (dx > 8 || dy > 8) {
+                    hasMoved = true;
+                    clearTimeout(menuTimer);
+                }
+            }, { passive: true });
+
+            bubble.addEventListener("touchend", () => { clearTimeout(menuTimer); });
+            bubble.addEventListener("touchcancel", () => { clearTimeout(menuTimer); });
         } else {
             bubble.oncontextmenu = null;
         }
@@ -2639,10 +2753,14 @@
                 countText.innerHTML = `<strong>${files.length} Photo${files.length > 1 ? 's' : ''}</strong> Selected <span style="font-size:11px; opacity:0.85; margin-left:4px;">• Press Enter ↵ to Send</span>`;
             }
 
+            activePreviewUrls.forEach(url => URL.revokeObjectURL(url));
+            activePreviewUrls = [];
             for (let i = 0; i < files.length; i++) {
                 const imgElement = document.createElement("img");
                 imgElement.className = "preview-thumb";
-                imgElement.src = URL.createObjectURL(files[i]);
+                const objUrl = URL.createObjectURL(files[i]);
+                activePreviewUrls.push(objUrl);
+                imgElement.src = objUrl;
                 container.appendChild(imgElement);
             }
 
@@ -2652,10 +2770,18 @@
             }
         };
 
-        // Listen for connection state changes
+        // Listen for connection state changes and restore presence on reconnect
         onValue(ref(db, ".info/connected"), (s) => {
             const banner = document.getElementById("offlineBanner");
-            if (banner) banner.style.display = (s.val() === false) ? "block" : "none";
+            const isConnected = (s.val() === true);
+            if (banner) banner.style.display = isConnected ? "none" : "block";
+
+            if (isConnected && currentRoom) {
+                const activeRef = ref(db, "rooms/" + currentRoom + "/active/" + myId);
+                set(activeRef, username);
+                onDisconnect(activeRef).remove();
+                onDisconnect(ref(db, "rooms/" + currentRoom + "/typing/" + myId)).remove();
+            }
         });
 
         oldestMessageKey = null;
@@ -2854,15 +2980,50 @@
     };
 
     window.copyText = async (text) => {
-        try { await navigator.clipboard.writeText(text); } catch (err) {}
+        if (!text) {
+            removeMenu();
+            return;
+        }
+        let copied = false;
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(text);
+                copied = true;
+            } catch(e) {}
+        }
+        if (!copied) {
+            try {
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                ta.style.position = "fixed";
+                ta.style.opacity = "0";
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+                copied = true;
+            } catch(e) {}
+        }
+        window.showToast(copied ? "Message copied!" : "Unable to copy", copied ? "📋" : "⚠️");
         removeMenu();
     };
 
     window.deleteMsg = (id) => {
-        set(ref(db, "rooms/" + currentRoom + "/messages/" + id + "/isDeleted"), true);
-        set(ref(db, "rooms/" + currentRoom + "/messages/" + id + "/deletedBy"), username);
-        set(ref(db, "rooms/" + currentRoom + "/messages/" + id + "/text"), "");
-        set(ref(db, "rooms/" + currentRoom + "/messages/" + id + "/image"), "");
+        const msgRef = ref(db, "rooms/" + currentRoom + "/messages/" + id);
+        update(msgRef, {
+            isDeleted: true,
+            deletedBy: username,
+            text: "",
+            image: "",
+            originalName: "",
+            audio: "",
+            duration: "",
+            fileData: "",
+            fileName: "",
+            fileSize: ""
+        });
+        window.showToast("Message deleted", "🗑");
         removeMenu();
     };
 
