@@ -408,34 +408,18 @@
             white-space: pre-wrap;
         }
 
-        /* IMAGE SKELETON LAYER */
+        /* CHAT PHOTO CONTAINER & BUBBLE IMAGE */
         .image-container-box {
             position: relative;
             width: 240px;
             max-width: 100%;
-            min-height: 150px;
-            border-radius: 16px;
-            background: linear-gradient(90deg, #111c2d 25%, #1c2d44 50%, #111c2d 75%);
-            background-size: 200% 100%;
-            animation: imageLoadingShimmer 1.5s infinite linear;
+            border-radius: 14px;
+            background: #0b1320;
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-        }
-
-        @keyframes imageLoadingShimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        .image-loading-placeholder {
-            position: absolute;
-            font-size: 13px;
-            color: #64748b;
-            font-style: italic;
-            z-index: 1;
-            pointer-events: none;
+            margin-top: 4px;
         }
 
         .msg img {
@@ -446,8 +430,112 @@
             cursor: pointer;
             position: relative;
             z-index: 2;
-            opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            border-radius: 14px;
+            opacity: 1;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .msg img:hover {
+            opacity: 0.93;
+            transform: scale(1.01);
+        }
+
+        /* HD IMAGE VIEWER MODAL (LIGHTBOX) */
+        .image-viewer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.94);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInViewer 0.2s ease;
+        }
+        @keyframes fadeInViewer {
+            from { opacity: 0; transform: scale(0.97); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .image-viewer-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+            z-index: 10;
+        }
+        .image-viewer-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f1f5f9;
+            max-width: 60%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .image-viewer-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .image-viewer-btn {
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .image-viewer-btn.download-btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+        }
+        .image-viewer-btn.download-btn:active {
+            transform: scale(0.95);
+        }
+        .image-viewer-btn.close-btn {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .image-viewer-btn.close-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .image-viewer-body {
+            max-width: 95vw;
+            max-height: 85vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        .image-viewer-body img {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            cursor: zoom-out;
         }
 
         /* SWIPE INDICATOR REAR ICON */
@@ -1336,13 +1424,26 @@
                 <div class="active-users-list" id="activeUsersList"></div>
             </div>
         </div>
+
+        <!-- HD FULLSCREEN IMAGE VIEWER MODAL -->
+        <div id="imageViewerModal" class="image-viewer-modal" style="display:none;" onclick="closeImageViewer()">
+            <div class="image-viewer-header" onclick="event.stopPropagation()">
+                <div class="image-viewer-title" id="imageViewerTitle">📷 photo_hd.jpg</div>
+                <div class="image-viewer-actions">
+                    <button class="image-viewer-btn download-btn" id="imageViewerDownloadBtn" title="Download HD Photo">⬇ Download HD</button>
+                    <button class="image-viewer-btn close-btn" onclick="closeImageViewer()" title="Close Viewer">✕</button>
+                </div>
+            </div>
+            <div class="image-viewer-body" onclick="event.stopPropagation()">
+                <img id="imageViewerImg" src="" alt="HD Photo" onclick="closeImageViewer()">
+            </div>
+        </div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import { getDatabase, ref, push, set, get, onChildAdded, onChildChanged, onValue, remove, onDisconnect, query, limitToLast, endBefore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
-    import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-storage.js";
 
     /* FIREBASE CONFIGURATION */
     const firebaseConfig = {
@@ -1357,15 +1458,17 @@
 
     const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     const db = getDatabase(app);
-    const storage = getStorage(app);
 
-    /* HIGH QUALITY IMAGE COMPRESSION & FIREBASE STORAGE UPLOADER */
-    function compressImageHD(file, maxWidth = 2560, maxHeight = 1440, quality = 0.90) {
+    /* HIGH DEFINITION (HD) IMAGE PROCESSOR (FAST & RELIABLE) */
+    function compressImage(file, maxWidth = 1600, maxHeight = 1600, quality = 0.82) {
         return new Promise((resolve) => {
             const reader = new FileReader();
+            reader.onerror = () => resolve("");
             reader.onload = (e) => {
                 const img = new Image();
+                img.onerror = () => resolve(e.target.result || "");
                 img.onload = () => {
+                    const canvas = document.createElement("canvas");
                     let width = img.width;
                     let height = img.height;
 
@@ -1379,14 +1482,11 @@
                         }
                     }
 
-                    const canvas = document.createElement("canvas");
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext("2d");
                     ctx.drawImage(img, 0, 0, width, height);
-                    canvas.toBlob((blob) => {
-                        resolve(blob || file);
-                    }, "image/jpeg", quality);
+                    resolve(canvas.toDataURL("image/jpeg", quality));
                 };
                 img.src = e.target.result;
             };
@@ -1394,22 +1494,10 @@
         });
     }
 
-    async function uploadPhotoToFirebase(file) {
-        // Try uploading full high quality photo to Firebase Storage
-        try {
-            const hdBlob = await compressImageHD(file, 2560, 1440, 0.90);
-            const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-            const storagePath = `rooms/${currentRoom}/photos/${Date.now()}_${safeName}`;
-            const photoStorageRef = sRef(storage, storagePath);
-            const snap = await uploadBytes(photoStorageRef, hdBlob);
-            const downloadUrl = await getDownloadURL(snap.ref);
-            return { url: downloadUrl, originalName: file.name };
-        } catch (err) {
-            console.warn("Firebase Storage bucket fallback to HD canvas data URL:", err);
-            // Fallback to high-definition data URL (1920x1080 at 0.85 quality)
-            const fallbackDataUrl = await compressImage(file, 1920, 1080, 0.85);
-            return { url: fallbackDataUrl, originalName: file.name };
-        }
+    async function processPhotoHD(file) {
+        const safeName = file.name ? file.name.replace(/[^a-zA-Z0-9._-]/g, "_") : `photo_${Date.now()}.jpg`;
+        const dataUrl = await compressImage(file, 1600, 1600, 0.82);
+        return { url: dataUrl, originalName: safeName };
     }
 
     let oldestMessageKey = null;
@@ -2025,6 +2113,13 @@
         }
     });
 
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            window.closeImageViewer();
+            window.closeActiveUsersModal();
+        }
+    });
+
     initEmojiPicker();
 
     function safe(t) {
@@ -2049,103 +2144,33 @@
         return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
 
-    function compressImage(file, maxWidth, maxHeight, quality) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    let width = img.width;
-                    let height = img.height;
 
-                    if (width > height) {
-                        if (width > maxWidth) {
-                            height *= maxWidth / width;
-                            width = maxWidth;
-                        }
-                    } else {
-                        if (height > maxHeight) {
-                            width *= maxHeight / height;
-                            height = maxHeight;
-                        }
-                    }
 
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL("image/jpeg", quality));
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    }
+    /* FULLSCREEN HD LIGHTBOX VIEWER & DOWNLOAD */
+    window.openImageViewer = (imgSrc, fileName = "chat_photo_hd.jpg") => {
+        const modal = document.getElementById("imageViewerModal");
+        const img = document.getElementById("imageViewerImg");
+        const title = document.getElementById("imageViewerTitle");
+        const dlBtn = document.getElementById("imageViewerDownloadBtn");
+
+        if (!modal || !img) return;
+
+        img.src = imgSrc;
+        title.innerText = "📷 " + fileName;
+        dlBtn.onclick = () => window.downloadImage(imgSrc, fileName);
+
+        modal.style.display = "flex";
+    };
+
+    window.closeImageViewer = () => {
+        const modal = document.getElementById("imageViewerModal");
+        if (modal) modal.style.display = "none";
+        const img = document.getElementById("imageViewerImg");
+        if (img) img.src = "";
+    };
 
     window.viewImageInNewTab = (imgSrc, fileName = "chat_photo_hd.jpg") => {
-        const newTab = window.open();
-        if (newTab) {
-            newTab.document.title = "View HD Image - Modern Chat";
-            newTab.document.body.style.margin = "0";
-            newTab.document.body.style.background = "#000814";
-            newTab.document.body.style.display = "flex";
-            newTab.document.body.style.flexDirection = "column";
-            newTab.document.body.style.justifyContent = "center";
-            newTab.document.body.style.alignItems = "center";
-            newTab.document.body.style.height = "100vh";
-            newTab.document.body.style.position = "relative";
-            newTab.document.body.style.overflow = "hidden";
-
-            const headerBar = newTab.document.createElement("div");
-            headerBar.style.position = "fixed";
-            headerBar.style.top = "16px";
-            headerBar.style.zIndex = "1000";
-            headerBar.style.background = "rgba(15, 23, 42, 0.85)";
-            headerBar.style.backdropFilter = "blur(10px)";
-            headerBar.style.padding = "8px 16px";
-            headerBar.style.borderRadius = "24px";
-            headerBar.style.border = "1px solid rgba(255, 255, 255, 0.15)";
-            headerBar.style.boxShadow = "0 8px 24px rgba(0,0,0,0.6)";
-            headerBar.innerHTML = `
-                <button id="downloadHdBtn" style="background: linear-gradient(135deg, #5b5fff, #7b2ff7); border: none; color: white; padding: 8px 18px; border-radius: 14px; font-weight: bold; cursor: pointer; font-size: 13px; font-family: Arial, sans-serif; display: flex; align-items: center; gap: 6px;">
-                    ⬇ Download Original HD
-                </button>
-            `;
-            newTab.document.body.appendChild(headerBar);
-
-            const dlBtn = headerBar.querySelector("#downloadHdBtn");
-            dlBtn.onclick = async () => {
-                dlBtn.innerText = "⏳ Downloading...";
-                try {
-                    const res = await fetch(imgSrc);
-                    const blob = await res.blob();
-                    const blobUrl = URL.createObjectURL(blob);
-                    const a = newTab.document.createElement("a");
-                    a.href = blobUrl;
-                    a.download = fileName;
-                    a.click();
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
-                    dlBtn.innerText = "✓ Downloaded!";
-                    setTimeout(() => { dlBtn.innerText = "⬇ Download Original HD"; }, 2000);
-                } catch(e) {
-                    const a = newTab.document.createElement("a");
-                    a.href = imgSrc;
-                    a.target = "_blank";
-                    a.download = fileName;
-                    a.click();
-                    dlBtn.innerText = "⬇ Download Original HD";
-                }
-            };
-
-            const img = newTab.document.createElement("img");
-            img.src = imgSrc;
-            img.style.maxWidth = "95%";
-            img.style.maxHeight = "85vh";
-            img.style.objectFit = "contain";
-            img.style.borderRadius = "12px";
-            newTab.document.body.appendChild(img);
-        }
+        window.openImageViewer(imgSrc, fileName);
     };
 
     window.initiateReply = (msgSender, msgText, msgKey, isDeleted) => {
@@ -2398,8 +2423,7 @@
                 ${(msg.text && msg.text.trim() !== "") ? `<div class="text">${formatMessageText(msg.text)}</div>` : ""}
                 ${msg.image ? `
                 <div class="image-container-box">
-                    <div class="image-loading-placeholder">⏳ Loading Image...</div>
-                    <img src="${msg.image}" class="chat-loaded-img" onload="this.style.opacity=1; this.previousElementSibling.style.display='none'; handleImgLoadScroll();">
+                    <img src="${msg.image}" class="chat-loaded-img" alt="Photo" onerror="this.style.display='none'; this.parentElement.innerText='⚠️ Could not load image';">
                 </div>` : ""}
                 ${msg.audio ? `
                 <div class="audio-msg-player" id="audio-player-${dataKey}">
@@ -2426,10 +2450,11 @@
         bubble.innerHTML = innerHTMLContent;
 
         if (msg.image) {
-            bubble.setAttribute("data-imgname", msg.originalName || "photo_" + dataKey + ".jpg");
+            const imgFileName = msg.originalName || "photo_" + dataKey + ".jpg";
+            bubble.setAttribute("data-imgname", imgFileName);
             const chatImg = bubble.querySelector(".chat-loaded-img");
             if (chatImg) {
-                chatImg.onclick = () => window.viewImageInNewTab(msg.image, msg.originalName || "photo_" + dataKey + ".jpg");
+                chatImg.onclick = () => window.openImageViewer(msg.image, imgFileName);
             }
         }
 
@@ -2678,9 +2703,10 @@
 
                 for (let i = 0; i < files.length; i++) {
                     sendBtn.innerText = `${i + 1}/${files.length} ⏳`;
-                    textInput.placeholder = `Uploading HD ${i + 1}/${files.length}...`;
+                    textInput.placeholder = `Processing HD ${i + 1}/${files.length}...`;
 
-                    const photoData = await uploadPhotoToFirebase(files[i]);
+                    const photoData = await processPhotoHD(files[i]);
+                    if (!photoData.url) continue;
 
                     await push(roomRef, {
                         name: username,
@@ -2692,7 +2718,7 @@
                         isDeleted: false,
                         deletedBy: ""
                     });
-                    if (files.length > 1) await new Promise(r => setTimeout(r, 100));
+                    if (files.length > 1) await new Promise(r => setTimeout(r, 60));
                 }
             } else {
                 await push(roomRef, { name: username, text: text, image: "", time: getTime(), replyTo: replyPayload, isDeleted: false, deletedBy: "" });
@@ -2812,16 +2838,25 @@
 
     window.downloadImage = async (src, fileName = "chat_photo_hd.jpg") => {
         try {
-            const resp = await fetch(src);
-            const blob = await resp.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = blobUrl;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+            if (src.startsWith("data:")) {
+                const a = document.createElement("a");
+                a.href = src;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                const resp = await fetch(src);
+                const blob = await resp.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = blobUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+            }
         } catch (e) {
             const a = document.createElement("a");
             a.href = src;
