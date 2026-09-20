@@ -4,7 +4,7 @@
 
 # 💬 ChatBharo - Modern Realtime Chat Web Application
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Blogspot-ff5722?style=for-the-badge&logo=blogger&logoColor=white)](https://realtimexyz.blogspot.com/)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Blogspot-ff5722?style=for-the-badge&logo=blogger&logoColor=white)](https://chatbharo.blogspot.com/)
 [![GitHub](https://img.shields.io/badge/GitHub-gitgaurav--web-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/gitgaurav-web/realtime-chat)
 [![Firebase](https://img.shields.io/badge/Firebase-Realtime_Database-FFA611?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com/)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/)
@@ -14,7 +14,7 @@
 
 A high-performance, mobile-first **Realtime Chat Web Application** engineered with pure Vanilla HTML5, CSS3, JavaScript (ES Modules), and **Firebase Realtime Database**. Designed from the ground up for zero-dependency integration, silky 60/120fps UI smoothness, and seamless Blogger / GitHub Pages hosting.
 
-🌐 **Live Demo on Blogspot:** [https://realtimexyz.blogspot.com/](https://realtimexyz.blogspot.com/)
+🌐 **Live Demo on Blogspot:** [https://chatbharo.blogspot.com/](https://chatbharo.blogspot.com/)
 
 ---
 
@@ -67,7 +67,7 @@ A high-performance, mobile-first **Realtime Chat Web Application** engineered wi
 - Shows an animated warning banner (`⚠️ Connection lost. Reconnecting to server...`) if internet drops, and automatically restores online presence (`activeRef`) upon reconnection.
 
 ### 🔗 1-Click Room Sharing & Auto-URL Join
-- **Room Share Button:** Click `🔗 Share` in the header to copy `https://realtimexyz.blogspot.com/?room=XYZ` or trigger native mobile share sheets.
+- **Room Share Button:** Click `🔗 Share` in the header to copy `https://chatbharo.blogspot.com/?room=XYZ` or trigger native mobile share sheets.
 - **Auto-Fill Room URL:** Visiting a link with `?room=XYZ` automatically pre-fills the room code.
 - **Auto-Linkify URLs:** Converts links in chat messages into secure, clickable links (`target="_blank" rel="noopener noreferrer"`).
 
@@ -113,7 +113,7 @@ realtim/
 2. Go to your **Blogger Dashboard** -> **Theme** -> Click the three dots next to **Customize** -> **Edit HTML**.
 3. Select everything in the editor and replace it with your copied code.
 4. Click **Save** (💾 icon) in the top right corner.
-5. Visit your blog URL (e.g. `https://realtimexyz.blogspot.com/`) to chat!
+5. Visit your blog URL (e.g. `https://chatbharo.blogspot.com/`) to chat!
 
 ---
 
@@ -121,7 +121,7 @@ realtim/
 
 **Gaurav Kumar**
 - GitHub: [@gitgaurav-web](https://github.com/gitgaurav-web)
-- Live Project: [Modern Chat Rooms on Blogspot](https://realtimexyz.blogspot.com/)
+- Live Project: [Modern Chat Rooms on Blogspot](https://chatbharo.blogspot.com/)
 
 ---
 
