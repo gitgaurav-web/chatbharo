@@ -1645,7 +1645,7 @@
             }, 500);
 
         } catch (err) {
-            alert("Microphone permission needed to send voice notes.");
+            window.showToast("Microphone permission needed for voice notes", "🎙️");
         }
     };
 
@@ -1691,7 +1691,7 @@
                         deletedBy: ""
                     });
                     cancelReply();
-                } catch (err) { alert("Failed to send audio: " + err.message); }
+                } catch (err) { window.showToast("Failed to send audio: " + err.message, "❌"); }
             };
             reader.readAsDataURL(audioBlob);
         };
@@ -2464,7 +2464,7 @@
             try { localStorage.setItem("chat_username", username); } catch(e) {}
             await set(ref(db, "rooms/" + code + "/info"), { room: room });
             openChat(code, room);
-        } catch (error) { alert(error.message); }
+        } catch (error) { window.showToast(error.message, "⚠️"); }
     };
 
     window.joinRoom = async () => {
@@ -2484,7 +2484,7 @@
             } else {
                 window.showToast("Room code not found", "❌");
             }
-        } catch (error) { alert(error.message); }
+        } catch (error) { window.showToast(error.message, "⚠️"); }
     };
 
     function renderMessageBubble(msg, dataKey, existingWrap = null) {
@@ -2697,7 +2697,7 @@
             // Strict 20 MB size limit
             const maxLimit = 20 * 1024 * 1024; // 20 MB
             if (file.size > maxLimit) {
-                alert(`File size exceeds 20 MB limit! Selected: ${formatBytes(file.size)}`);
+                window.showToast(`File exceeds limit! (${formatBytes(file.size)})`, "⚠️");
                 e.target.value = "";
                 return;
             }
@@ -2727,7 +2727,7 @@
                     });
                     cancelReply();
                 } catch(err) {
-                    alert("Failed to send document: " + err.message);
+                    window.showToast("Failed to send document: " + err.message, "❌");
                 }
                 sendBtn.innerText = oldSendText;
                 sendBtn.disabled = false;
@@ -2880,7 +2880,7 @@
                 await push(roomRef, { name: username, text: text, image: "", time: getTime(), replyTo: replyPayload, isDeleted: false, deletedBy: "" });
             }
             remove(ref(db, "rooms/" + currentRoom + "/typing/" + myId));
-        } catch (error) { alert(error.message); }
+        } catch (error) { window.showToast(error.message, "⚠️"); }
 
         textInput.value = "";
         textInput.style.height = "auto";
@@ -3059,6 +3059,12 @@
     };
 
     window.logout = () => {
+        if (activeAudioElement) {
+            try { activeAudioElement.pause(); } catch(e) {}
+        }
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+            try { window.cancelVoiceRecording(); } catch(e) {}
+        }
         remove(ref(db, "rooms/" + currentRoom + "/typing/" + myId));
         remove(ref(db, "rooms/" + currentRoom + "/active/" + myId));
         location.reload();
