@@ -5,7 +5,7 @@
 # 💬 ChatBharo - Modern Realtime Chat Web Application
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Blogspot-ff5722?style=for-the-badge&logo=blogger&logoColor=white)](https://chatbharo.blogspot.com/)
-[![GitHub](https://img.shields.io/badge/GitHub-gitgaurav--web-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/gitgaurav-web/realtime-chat)
+[![GitHub](https://img.shields.io/badge/GitHub-gitgaurav--web-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/gitgaurav-web/chatbharo)
 [![Firebase](https://img.shields.io/badge/Firebase-Realtime_Database-FFA611?style=for-the-badge&logo=firebase&logoColor=white)](https://firebase.google.com/)
 [![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/)
 [![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/)
