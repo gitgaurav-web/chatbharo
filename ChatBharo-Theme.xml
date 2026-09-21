@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version='1.0' encoding='UTF-8' ?>
 <!DOCTYPE html>
 <html b:css='false' b:defaultwidgetversion='2' b:layoutsVersion='3' b:responsive='true' lang='en' xmlns='http://www.w3.org/1999/xhtml' xmlns:b='http://www.google.com/2005/gml/b' xmlns:data='http://www.google.com/2005/gml/data' xmlns:expr='http://www.google.com/2005/gml/expr'>
 <head>
@@ -48,6 +48,7 @@
     }
     </script>
 
+    <!-- Official Blogger Skin -->
     <b:skin><![CDATA[
 /* RESET & CSS VARIABLES FOR DYNAMIC MOBILE VIEWPORT & NOTCHES */
         :root {
@@ -1634,7 +1635,7 @@
 </head>
 <body>
 
-    <!-- BLOGGER REQUIRED SECTION & WIDGET (HIDDEN) -->
+    <!-- Blogger Required Section & Widget (Hidden to remove all default posts/headers) -->
     <b:section id='main-chatbharo' showaddelement='no'>
         <b:widget id='Blog1' locked='true' title='Blog Posts' type='Blog' visible='false'>
             <b:includable id='main'>
@@ -1642,7 +1643,7 @@
         </b:widget>
     </b:section>
 
-    <!-- CHATBHARO REALTIME CHAT WEB APP -->
+    <!-- ChatBharo Realtime App -->
 <div id="toastBox">✓ Notification</div>
     <!-- SEO CRAWLER ACCESSIBILITY CONTENT (Indexed by Googlebot) -->
     <div class="sr-only" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
