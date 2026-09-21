@@ -71,6 +71,14 @@
             background: #000814;
         }
 
+                /* Hide default Blogger navbar iframe if present */
+        #navbar-iframe {
+            display: none !important;
+            height: 0 !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+        }
+
         /* Prevent iOS Safari 20% auto-zoom bug on focus */
         input, textarea, select {
             font-size: 16px !important;
@@ -3349,6 +3357,11 @@
        MOBILE VIEWPORT & VIRTUAL KEYBOARD PINNING SYSTEM
        ======================================================== */
     function initMobileViewport() {
+        // Clean ?m=1 from URL seamlessly
+        if (window.location.search.includes('m=1')) {
+            const cleanUrl = window.location.href.replace(/([?&])m=1(&|$)/, '').replace(/\?$/, '');
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
         const updateHeight = () => {
             let vh = window.innerHeight;
             if (window.visualViewport) {
