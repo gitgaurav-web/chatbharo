@@ -1654,7 +1654,7 @@
             <li>Instant Group Chat Rooms with Custom Room Codes</li>
             <li>High Definition HD Photo Upload &amp; Download</li>
             <li>Voice Notes &amp; Audio Messaging with built-in player</li>
-            <li>Document &amp; File Sharing up to 20MB (PDF, Docs, Excel, Zip)</li>
+            <li>Universal File Sharing up to 25MB (PDF, APK, Video, Audio, Docs, Zip, Code &amp; Any File)</li>
             <li>Emoji Reactions and WhatsApp-style Swipe to Reply</li>
             <li>Live Active Online Members Presence</li>
         </ul>
@@ -1744,9 +1744,9 @@
                         📷
                         <input type="file" id="imageInput" accept="image/*" multiple="multiple"/>
                     </label>
-                    <label class="doc-upload-btn" id="docUploadLabel" title="Send Document (Max 20MB)">
+                    <label class="doc-upload-btn" id="docUploadLabel" title="Send Any File (Max 25MB)">
                         📎
-                        <input type="file" id="docFileInput" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar,.7z,.csv,.json"/>
+                        <input type="file" id="docFileInput" multiple="multiple"/>
                     </label>
                 </div>
                 <div class="input-pill-wrapper">
@@ -1868,25 +1868,65 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
     function getFileIcon(fileName) {
         if (!fileName) return "📁";
         const ext = fileName.split(".").pop().toLowerCase();
+        
+        // Documents & Text
         if (ext === "pdf") return "📄";
-        if (["doc", "docx"].includes(ext)) return "📑";
-        if (["xls", "xlsx", "csv"].includes(ext)) return "📊";
-        if (["ppt", "pptx"].includes(ext)) return "📽️";
-        if (["zip", "rar", "7z", "tar", "gz"].includes(ext)) return "📦";
-        if (["txt", "md", "json", "js", "py", "html", "css"].includes(ext)) return "📝";
-        return "📎";
+        if (["doc", "docx", "rtf", "odt"].includes(ext)) return "📑";
+        if (["xls", "xlsx", "csv", "ods"].includes(ext)) return "📊";
+        if (["ppt", "pptx", "odp", "key"].includes(ext)) return "📽️";
+        if (["txt", "md", "log"].includes(ext)) return "📝";
+        
+        // Media (Audio / Video / Image)
+        if (["mp3", "wav", "m4a", "aac", "ogg", "flac", "wma", "opus"].includes(ext)) return "🎵";
+        if (["mp4", "mkv", "avi", "mov", "webm", "3gp", "flv", "wmv", "m4v"].includes(ext)) return "🎬";
+        if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico", "psd", "ai", "eps"].includes(ext)) return "🖼️";
+        
+        // Archives & Compressed
+        if (["zip", "rar", "7z", "tar", "gz", "bz2", "xz", "iso", "dmg"].includes(ext)) return "📦";
+        
+        // Code & Web Scripts
+        if (["html", "css", "js", "ts", "jsx", "tsx", "json", "xml", "py", "java", "cpp", "c", "cs", "php", "rb", "go", "rs", "sql", "sh", "bat"].includes(ext)) return "💻";
+        
+        // Mobile Apps & Software Executables
+        if (["apk", "xapk", "aab"].includes(ext)) return "📱";
+        if (["exe", "msi", "pkg", "deb", "rpm"].includes(ext)) return "⚙️";
+        
+        // Fonts
+        if (["ttf", "otf", "woff", "woff2"].includes(ext)) return "🔤";
+        
+        // Universal fallback for any other file
+        return "📁";
     }
 
-    window.downloadAttachment = (fileData, fileName) => {
+    window.downloadAttachment = async (fileData, fileName) => {
         try {
+            if (fileData.startsWith("data:")) {
+                const res = await fetch(fileData);
+                const blob = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = blobUrl;
+                a.download = fileName || "download";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+                return;
+            }
             const a = document.createElement("a");
             a.href = fileData;
-            a.download = fileName || "attachment";
+            a.download = fileName || "download";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
         } catch(e) {
-            window.open(fileData, "_blank");
+            const a = document.createElement("a");
+            a.href = fileData;
+            a.download = fileName || "download";
+            a.target = "_blank";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     };
 
@@ -2847,9 +2887,9 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
                     <div class="file-icon-box">${getFileIcon(msg.fileName)}</div>
                     <div class="file-info-box">
                         <div class="file-name-text" title="${safe(msg.fileName)}">${safe(msg.fileName)}</div>
-                        <div class="file-meta-text">${safe(msg.fileSize || "")} • Document</div>
+                        <div class="file-meta-text">${safe(msg.fileSize || "")} • ${safe((msg.fileName ? msg.fileName.split('.').pop().toUpperCase() : 'FILE'))}</div>
                     </div>
-                    <button class="file-download-btn" onclick="window.downloadAttachment('${msg.fileData}', '${safe(msg.fileName)}')" title="Download File">⬇</button>
+                    <button class="file-download-btn" title="Download File">⬇</button>
                 </div>` : ""}
                 ${renderReactionsHTML(msg.reactions, dataKey)}
             `;
@@ -2864,6 +2904,16 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
             const chatImg = bubble.querySelector(".chat-loaded-img");
             if (chatImg) {
                 chatImg.onclick = () => window.openImageViewer(msg.image, imgFileName);
+            }
+        }
+
+        if (msg.fileData) {
+            const fileBtn = bubble.querySelector(".file-download-btn");
+            if (fileBtn) {
+                fileBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.downloadAttachment(msg.fileData, msg.fileName);
+                };
             }
         }
 
@@ -2986,49 +3036,60 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
         autoResizeTextarea();
 
         document.getElementById("docFileInput").onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
 
-            // Strict 20 MB size limit
-            const maxLimit = 20 * 1024 * 1024; // 20 MB
-            if (file.size > maxLimit) {
-                window.showToast(`File exceeds limit! (${formatBytes(file.size)})`, "⚠️");
-                e.target.value = "";
-                return;
-            }
-
+            const maxLimit = 25 * 1024 * 1024; // 25 MB limit
             const sendBtn = document.getElementById("sendBtn");
             const oldSendText = sendBtn.innerText;
-            sendBtn.innerText = "⏳";
             sendBtn.disabled = true;
 
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const base64Data = event.target.result;
-                const roomRef = ref(db, "rooms/" + currentRoom + "/messages");
-                let replyPayload = activeReplyData ? { name: activeReplyData.name, text: activeReplyData.text, key: activeReplyData.key } : null;
+            const roomRef = ref(db, "rooms/" + currentRoom + "/messages");
 
-                try {
-                    await push(roomRef, {
-                        name: username,
-                        text: "",
-                        fileData: base64Data,
-                        fileName: file.name,
-                        fileSize: formatBytes(file.size),
-                        time: getTime(),
-                        replyTo: replyPayload,
-                        isDeleted: false,
-                        deletedBy: ""
-                    });
-                    cancelReply();
-                } catch(err) {
-                    window.showToast("Failed to send document: " + err.message, "❌");
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.size > maxLimit) {
+                    window.showToast(`${file.name} exceeds 25MB limit! (${formatBytes(file.size)})`, "⚠️");
+                    continue;
                 }
-                sendBtn.innerText = oldSendText;
-                sendBtn.disabled = false;
-                e.target.value = "";
-            };
-            reader.readAsDataURL(file);
+
+                sendBtn.innerText = files.length > 1 ? `${i + 1}/${files.length} ⏳` : "⏳";
+
+                await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        const base64Data = event.target.result;
+                        let replyPayload = activeReplyData ? { name: activeReplyData.name, text: activeReplyData.text, key: activeReplyData.key } : null;
+
+                        try {
+                            await push(roomRef, {
+                                name: username,
+                                text: "",
+                                fileData: base64Data,
+                                fileName: file.name,
+                                fileSize: formatBytes(file.size),
+                                time: getTime(),
+                                replyTo: replyPayload,
+                                isDeleted: false,
+                                deletedBy: ""
+                            });
+                            cancelReply();
+                        } catch(err) {
+                            window.showToast(`Failed to send ${file.name}: ${err.message}`, "❌");
+                        }
+                        resolve();
+                    };
+                    reader.onerror = () => {
+                        window.showToast(`Error reading ${file.name}`, "❌");
+                        resolve();
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            sendBtn.innerText = oldSendText;
+            sendBtn.disabled = false;
+            e.target.value = "";
         };
 
         document.getElementById("imageInput").onchange = () => {

@@ -25,14 +25,16 @@ A high-performance, mobile-first **Realtime Chat Web Application** engineered wi
 - **In-Chat Fullscreen Lightbox Modal:** Tapping any photo opens a sleek dark glassmorphic viewer with original image name and an instant **⬇ Download HD** button (100% immune to mobile popup blockers).
 - **⌨️ Send Photos with Enter (`↵`):** Selecting photos auto-focuses the message input and shows an interactive shortcut hint (`• Press Enter ↵ to Send`). Pressing Enter anywhere sends selected photos instantly!
 
-### 📎 20MB Multi-Format Document & File Sharing
-- **Paperclip Attachment (`📎`):** Supports all popular formats:
-  - **Documents:** `.pdf`, `.doc`, `.docx`, `.txt`, `.md`
-  - **Spreadsheets:** `.xls`, `.xlsx`, `.csv`
-  - **Presentations:** `.ppt`, `.pptx`
-  - **Archives:** `.zip`, `.rar`, `.7z`, `.tar`, `.gz`
-  - **Code:** `.json`, `.js`, `.py`, `.html`, `.css`
-- **Sleek In-Chat File Card:** Displays format-specific icons (`📄 📑 📊 📽️ 📦 📝`), original filename, formatted size, and local download button.
+### 📎 Universal Any-File Sharing (Up to 25MB)
+- **Paperclip Attachment (📎):** Supports **ANY file format without restriction**:
+  - **Documents & Text:** .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt, .csv, .md, .rtf, .odt
+  - **Media:** Videos (.mp4, .mkv, .avi, .mov, .webm), Audio (.mp3, .wav, .m4a, .aac, .flac, .ogg), Images (.png, .jpg, .webp, .svg, .psd)
+  - **Mobile Apps & Software:** .apk, .xapk, .exe, .msi, .dmg, .pkg, .deb
+  - **Archives:** .zip, .rar, .7z, .tar, .gz, .iso
+  - **Code & Scripts:** .py, .java, .cpp, .js, .ts, .html, .css, .json, .xml, .sql, .sh
+  - **Any custom binary/data file**
+- **Dynamic File Type Icons:** Automatically displays dedicated icons (📄 📑 📊 📽️ 🎵 🎬 🖼️ 📦 💻 📱 ⚙️ 🔤 📁), original filename, exact extension tag (e.g. 2.5 MB • APK), and 1-tap local download button.
+- **Multi-File Selection:** Select and send multiple files at once with live upload progress.
 
 ### 🎙️ High-Fidelity Voice Notes (MediaRecorder API)
 - **Built-in Audio Recorder:** One-tap voice recording with live duration timer (`0:05`), pulsing red indicator, and cancel/send controls.
