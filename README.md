@@ -45,6 +45,12 @@ A high-performance, mobile-first **Realtime Chat Web Application** engineered wi
 - **Auto-Pruning on Entry & In-Chat Watchdog:** Expired rooms are purged immediately upon creation, joining, or background sweeps. Messages older than 10 days are automatically deleted from Firebase Realtime Database.
 - **Auto-Privacy Notice:** Clear privacy disclosure banner displayed on the login page informing users that all data auto-deletes every 10 days.
 
+### ⏱️ WhatsApp-Style Message Status Ticks (Sent, Delivered, Seen)
+- **🕒 Clock Icon (Sending):** Displayed beside the message timestamp while text, voice notes, or large 50MB files/folders are uploading.
+- **✓ Single Grey Tick (Sent):** Confirms the message has successfully reached Firebase Realtime Database.
+- **✓✓ Double Grey Tick (Delivered):** Confirms the message has reached other members in the room.
+- **✓✓ Double Blue Tick (Seen / Read):** WhatsApp signature cyan/blue tick (`#53bdeb`) automatically turns on when other participants view the chat!
+
 ### 🎙️ High-Fidelity Voice Notes (MediaRecorder API)
 - **Built-in Audio Recorder:** One-tap voice recording with live duration timer (`0:05`), pulsing red indicator, and cancel/send controls.
 - **Custom Embedded Audio Player:** Features Play/Pause button, real-time waveform progress bar, and formatted duration labels.

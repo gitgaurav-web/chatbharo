@@ -525,6 +525,53 @@
             max-width: 200px;
         }
 
+        /* MESSAGE TIMESTAMP & WHATSAPP STATUS TICKS */
+        .msg-status-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            align-self: flex-end;
+            margin-top: 2px;
+            font-size: 11px;
+            opacity: 0.82;
+            user-select: none;
+            line-height: 1;
+        }
+
+        .time {
+            font-size: 11px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .msg-status-tick {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            margin-left: 1px;
+        }
+
+        .msg-status-tick svg {
+            display: block;
+        }
+
+        .msg-status-tick.tick-pending {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .msg-status-tick.tick-sent {
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .msg-status-tick.tick-delivered {
+            color: rgba(255, 255, 255, 0.82);
+        }
+
+        .msg-status-tick.tick-seen {
+            color: #53bdeb; /* Exact WhatsApp Cyan/Blue Checkmark */
+        }
+
         /* NAME */
         .name {
             font-size: 11px;
@@ -2197,12 +2244,16 @@
                 try {
                     await push(roomRef, {
                         name: username,
+                        senderId: myId,
                         text: "",
                         image: "",
                         audio: base64Audio,
                         duration: durationText,
                         time: getTime(),
                         timestamp: Date.now(),
+                        status: 'sent',
+                        seenBy: { [myId]: Date.now() },
+                        deliveredTo: { [myId]: Date.now() },
                         replyTo: replyPayload,
                         isDeleted: false,
                         deletedBy: ""
@@ -2404,6 +2455,48 @@
     let currentRoom = "";
     let username = "";
     let myId = Date.now() + "_" + Math.random().toString(36).substring(2, 7);
+    let activeUsersCount = 0;
+
+    /* WHATSAPP-STYLE MESSAGE TICKS (PENDING, SENT, DELIVERED, SEEN) */
+    function getMessageStatus(msg) {
+        if (!msg) return 'sent';
+        if (msg.status === 'pending') return 'pending';
+
+        // 1. Check if seen by another participant in the room
+        if (msg.seenBy && typeof msg.seenBy === 'object') {
+            const seenKeys = Object.keys(msg.seenBy);
+            const hasOtherSeen = seenKeys.some(id => id !== msg.senderId && id !== myId);
+            if (hasOtherSeen) return 'seen';
+        }
+
+        // 2. Check if delivered to another participant in the room
+        if (msg.deliveredTo && typeof msg.deliveredTo === 'object') {
+            const delivKeys = Object.keys(msg.deliveredTo);
+            const hasOtherDelivered = delivKeys.some(id => id !== msg.senderId && id !== myId);
+            if (hasOtherDelivered) return 'delivered';
+        }
+
+        // 3. If multiple users are active in the room, mark as delivered
+        if (activeUsersCount > 1) {
+            return 'delivered';
+        }
+
+        return 'sent';
+    }
+
+    function getTickSVG(status) {
+        if (status === 'pending') {
+            return `<span class="msg-status-tick tick-pending" title="Sending...">🕒</span>`;
+        }
+        if (status === 'seen') {
+            return `<span class="msg-status-tick tick-seen" title="Read / Seen"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M11.15.7a.48.48 0 0 0-.69.04L4.78 7.37 2.27 4.86a.48.48 0 0 0-.68 0L.9 5.54a.48.48 0 0 0 0 .68l3.54 3.54a.48.48 0 0 0 .68 0l6.39-8.38a.48.48 0 0 0-.04-.68H11.15z"/><path d="M15.15.7a.48.48 0 0 0-.69.04l-5.68 6.63.78.78 5.27-6.77a.48.48 0 0 0-.04-.68H15.15z"/></svg></span>`;
+        }
+        if (status === 'delivered') {
+            return `<span class="msg-status-tick tick-delivered" title="Delivered"><svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><path d="M11.15.7a.48.48 0 0 0-.69.04L4.78 7.37 2.27 4.86a.48.48 0 0 0-.68 0L.9 5.54a.48.48 0 0 0 0 .68l3.54 3.54a.48.48 0 0 0 .68 0l6.39-8.38a.48.48 0 0 0-.04-.68H11.15z"/><path d="M15.15.7a.48.48 0 0 0-.69.04l-5.68 6.63.78.78 5.27-6.77a.48.48 0 0 0-.04-.68H15.15z"/></svg></span>`;
+        }
+        // Default: 'sent' (Single tick)
+        return `<span class="msg-status-tick tick-sent" title="Sent"><svg width="15" height="11" viewBox="0 0 16 12" fill="currentColor"><path d="M15.01 1.8l-.48-.37a.36.36 0 0 0-.51.06L6.47 10.55 3.24 7.32a.36.36 0 0 0-.52 0l-.48.48a.36.36 0 0 0 0 .52l3.75 3.75a.36.36 0 0 0 .52 0l8.05-9.75a.36.36 0 0 0 .05-.52z"/></svg></span>`;
+    }
     let activeReplyData = null;
     let typingTimeout = null;
 
@@ -3112,7 +3205,15 @@
             `;
         }
 
-        innerHTMLContent += `<div class="time">${msg.time || ""}</div>`;
+        const isMe = (msg.name === username);
+        const tickHTML = isMe && !msg.isDeleted ? getTickSVG(getMessageStatus(msg)) : "";
+
+        innerHTMLContent += `
+            <div class="msg-status-wrap">
+                <span class="time">${msg.time || ""}</span>
+                ${tickHTML}
+            </div>
+        `;
         bubble.innerHTML = innerHTMLContent;
 
         if (msg.image) {
@@ -3266,7 +3367,8 @@
         onDisconnect(ref(db, "rooms/" + code + "/typing/" + myId)).remove();
 
         onValue(ref(db, "rooms/" + code + "/active"), (s) => {
-            document.getElementById("activeUsers").innerText = s.exists() ? Object.keys(s.val()).length : 0;
+            activeUsersCount = s.exists() ? Object.keys(s.val()).length : 0;
+            document.getElementById("activeUsers").innerText = activeUsersCount;
         });
 
         document.getElementById("messageInput").onkeydown = (e) => {
@@ -3310,6 +3412,7 @@
                         try {
                             await push(roomRef, {
                                 name: username,
+                                senderId: myId,
                                 text: "",
                                 fileData: base64Data,
                                 fileName: file.name,
@@ -3317,6 +3420,9 @@
                                 isFolder: false,
                                 time: getTime(),
                                 timestamp: Date.now(),
+                                status: 'sent',
+                                seenBy: { [myId]: Date.now() },
+                                deliveredTo: { [myId]: Date.now() },
                                 replyTo: replyPayload,
                                 isDeleted: false,
                                 deletedBy: ""
@@ -3412,6 +3518,7 @@
                     try {
                         await push(roomRef, {
                             name: username,
+                            senderId: myId,
                             text: "",
                             fileData: base64Data,
                             fileName: `${folderName}.zip`,
@@ -3420,6 +3527,9 @@
                             folderFileCount: files.length,
                             time: getTime(),
                             timestamp: Date.now(),
+                            status: 'sent',
+                            seenBy: { [myId]: Date.now() },
+                            deliveredTo: { [myId]: Date.now() },
                             replyTo: replyPayload,
                             isDeleted: false,
                             deletedBy: ""
@@ -3555,6 +3665,7 @@
                             try {
                                 await push(roomRef, {
                                     name: username,
+                                    senderId: myId,
                                     text: "",
                                     fileData: base64Data,
                                     fileName: `${dirEntry.name}.zip`,
@@ -3563,6 +3674,9 @@
                                     folderFileCount: fileItems.length,
                                     time: getTime(),
                                     timestamp: Date.now(),
+                                    status: 'sent',
+                                    seenBy: { [myId]: Date.now() },
+                                    deliveredTo: { [myId]: Date.now() },
                                     replyTo: replyPayload,
                                     isDeleted: false,
                                     deletedBy: ""
@@ -3654,6 +3768,23 @@
                 remove(ref(db, "rooms/" + code + "/messages/" + data.key)).catch(() => {});
                 return;
             }
+
+            // Realtime Read & Delivery Receipt Tracking
+            if (msg && (msg.name !== username || (msg.senderId && msg.senderId !== myId))) {
+                if (!msg.deliveredTo || !msg.deliveredTo[myId]) {
+                    update(ref(db, "rooms/" + code + "/messages/" + data.key + "/deliveredTo"), {
+                        [myId]: Date.now()
+                    }).catch(() => {});
+                }
+                if (document.visibilityState === "visible") {
+                    if (!msg.seenBy || !msg.seenBy[myId]) {
+                        update(ref(db, "rooms/" + code + "/messages/" + data.key + "/seenBy"), {
+                            [myId]: Date.now()
+                        }).catch(() => {});
+                    }
+                }
+            }
+
             let wrap = renderMessageBubble(msg, data.key);
 
             const msgArea = document.getElementById("messages");
@@ -3720,11 +3851,15 @@
 
                     await push(roomRef, {
                         name: username,
+                        senderId: myId,
                         text: (i === 0) ? text : "",
                         image: photoData.url,
                         originalName: photoData.originalName,
                         time: getTime(),
                         timestamp: Date.now(),
+                        status: 'sent',
+                        seenBy: { [myId]: Date.now() },
+                        deliveredTo: { [myId]: Date.now() },
                         replyTo: replyPayload,
                         isDeleted: false,
                         deletedBy: ""
@@ -3735,10 +3870,14 @@
             } else {
                 await push(roomRef, {
                     name: username,
+                    senderId: myId,
                     text: text,
                     image: "",
                     time: getTime(),
                     timestamp: Date.now(),
+                    status: 'sent',
+                    seenBy: { [myId]: Date.now() },
+                    deliveredTo: { [myId]: Date.now() },
                     replyTo: replyPayload,
                     isDeleted: false,
                     deletedBy: ""
@@ -3943,6 +4082,29 @@
     /* ========================================================
        MOBILE VIEWPORT & VIRTUAL KEYBOARD PINNING SYSTEM
        ======================================================== */
+    /* MARK INCOMING MESSAGES AS SEEN ON TAB FOCUS / VISIBILITY */
+    const markIncomingMessagesSeen = () => {
+        if (document.visibilityState === "visible" && currentRoom) {
+            get(query(ref(db, "rooms/" + currentRoom + "/messages"), limitToLast(30))).then((snap) => {
+                if (snap.exists()) {
+                    snap.forEach((child) => {
+                        const m = child.val();
+                        if (m && (m.name !== username || (m.senderId && m.senderId !== myId))) {
+                            if (!m.seenBy || !m.seenBy[myId]) {
+                                update(ref(db, "rooms/" + currentRoom + "/messages/" + child.key + "/seenBy"), {
+                                    [myId]: Date.now()
+                                }).catch(() => {});
+                            }
+                        }
+                    });
+                }
+            }).catch(() => {});
+        }
+    };
+
+    document.addEventListener("visibilitychange", markIncomingMessagesSeen);
+    window.addEventListener("focus", markIncomingMessagesSeen);
+
     function initMobileViewport() {
         // Clean ?m=1 from URL seamlessly
         if (window.location.search.includes('m=1')) {
