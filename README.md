@@ -36,6 +36,12 @@ A high-performance, mobile-first **Realtime Chat Web Application** engineered wi
 - **Dynamic File Type Icons:** Automatically displays dedicated icons (📄 📑 📊 📽️ 🎵 🎬 🖼️ 📦 💻 📱 ⚙️ 🔤 📁), original filename, exact extension tag (e.g. 2.5 MB • APK), and 1-tap local download button.
 - **Multi-File Selection:** Select and send multiple files at once with live upload progress.
 
+### 🔒 10-Day Auto-Delete & TTL Lifecycle (Room & Data Auto-Deletion)
+- **Strict 10-Day Privacy TTL (`864,000,000 ms`):** Both chat rooms and all message data (text, HD photos, voice notes, files) are automatically destroyed after 10 days without requiring manual maintenance.
+- **Header TTL Badge:** Live countdown indicator (`• ⏳ 10d left`) displayed in the room header so users always know the remaining room lifetime.
+- **Auto-Pruning on Entry & In-Chat Watchdog:** Expired rooms are purged immediately upon creation, joining, or background sweeps. Messages older than 10 days are automatically deleted from Firebase Realtime Database.
+- **Auto-Privacy Notice:** Clear privacy disclosure banner displayed on the login page informing users that all data auto-deletes every 10 days.
+
 ### 🎙️ High-Fidelity Voice Notes (MediaRecorder API)
 - **Built-in Audio Recorder:** One-tap voice recording with live duration timer (`0:05`), pulsing red indicator, and cancel/send controls.
 - **Custom Embedded Audio Player:** Features Play/Pause button, real-time waveform progress bar, and formatted duration labels.
@@ -101,16 +107,25 @@ A high-performance, mobile-first **Realtime Chat Web Application** engineered wi
 
 ```text
 realtim/
-├── index.html       # Primary entry point (compatible with GitHub Pages)
-├── realtime.html    # Standalone single-file version (ideal for Blogger Theme HTML)
-├── .gitignore       # Git ignore rules for system/scratch files
-└── README.md        # Complete documentation and setup guide
+├── index.html            # Primary entry point (compatible with GitHub Pages)
+├── realtime.html         # Standalone single-file HTML version
+├── ChatBharo-Theme.xml   # Official 1-click Blogger XML Theme (mobile responsive, no ?m=1 bugs)
+├── .gitignore            # Git ignore rules for system/scratch files
+└── README.md             # Complete documentation and setup guide
 ```
 
 ---
 
 ## 📋 Blogger Deployment Guide
 
+### Method 1: 1-Click Theme Restore (Recommended)
+1. Download or locate `ChatBharo-Theme.xml`.
+2. Go to your **Blogger Dashboard** -> **Theme**.
+3. Click the dropdown arrow next to **Customize** -> Select **Restore**.
+4. Choose `ChatBharo-Theme.xml` and click **Upload**.
+5. Done! Your blog will now load ChatBharo cleanly on both desktop and mobile (`?m=1` redirection bypass).
+
+### Method 2: Manual Edit HTML
 1. Open `realtime.html` and copy the entire file contents (`Ctrl + A`, `Ctrl + C`).
 2. Go to your **Blogger Dashboard** -> **Theme** -> Click the three dots next to **Customize** -> **Edit HTML**.
 3. Select everything in the editor and replace it with your copied code.
