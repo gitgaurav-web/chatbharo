@@ -25,15 +25,18 @@ A high-performance, mobile-first **Realtime Chat Web Application** engineered wi
 - **In-Chat Fullscreen Lightbox Modal:** Tapping any photo opens a sleek dark glassmorphic viewer with original image name and an instant **⬇ Download HD** button (100% immune to mobile popup blockers).
 - **⌨️ Send Photos with Enter (`↵`):** Selecting photos auto-focuses the message input and shows an interactive shortcut hint (`• Press Enter ↵ to Send`). Pressing Enter anywhere sends selected photos instantly!
 
-### 📎 Universal Any-File Sharing (Up to 25MB)
-- **Paperclip Attachment (📎):** Supports **ANY file format without restriction**:
-  - **Documents & Text:** .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt, .csv, .md, .rtf, .odt
-  - **Media:** Videos (.mp4, .mkv, .avi, .mov, .webm), Audio (.mp3, .wav, .m4a, .aac, .flac, .ogg), Images (.png, .jpg, .webp, .svg, .psd)
-  - **Mobile Apps & Software:** .apk, .xapk, .exe, .msi, .dmg, .pkg, .deb
-  - **Archives:** .zip, .rar, .7z, .tar, .gz, .iso
-  - **Code & Scripts:** .py, .java, .cpp, .js, .ts, .html, .css, .json, .xml, .sql, .sh
-  - **Any custom binary/data file**
-- **Dynamic File Type Icons:** Automatically displays dedicated icons (📄 📑 📊 📽️ 🎵 🎬 🖼️ 📦 💻 📱 ⚙️ 🔤 📁), original filename, exact extension tag (e.g. 2.5 MB • APK), and 1-tap local download button.
+### 📎 Universal Any-File & Folder Sharing (Up to 50MB)
+- **Paperclip Attachment Menu (📎):** Tapping the paperclip opens a sleek action menu:
+  - **📄 Send Files:** Supports **ANY file format up to 50MB**:
+    - **Documents & Text:** .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx, .txt, .csv, .md, .rtf, .odt
+    - **Media:** Videos (.mp4, .mkv, .avi, .mov, .webm), Audio (.mp3, .wav, .m4a, .aac, .flac, .ogg), Images (.png, .jpg, .webp, .svg, .psd)
+    - **Mobile Apps & Software:** .apk, .xapk, .exe, .msi, .dmg, .pkg, .deb
+    - **Archives:** .zip, .rar, .7z, .tar, .gz, .iso
+    - **Code & Scripts:** .py, .java, .cpp, .js, .ts, .html, .css, .json, .xml, .sql, .sh
+    - **Any custom binary/data file**
+  - **📁 Send Full Folder:** Select any folder on desktop or mobile — ChatBharo automatically packages all files and subdirectories client-side into a `.zip` archive (using JSZip) with live compression progress (`📦 45%`) and sends it up to 50MB!
+- **🖱️ Drag & Drop Folders & Files:** On desktop, simply drag and drop folders or files directly onto the chat window to package and send instantly.
+- **Dynamic File Type Icons & Folder Badge:** Automatically displays dedicated icons (📄 📑 📊 📽️ 🎵 🎬 🖼️ 📦 💻 📱 ⚙️ 🔤 📁), folder file counter badge (`FOLDER (24 files)`), and 1-tap local download button.
 - **Multi-File Selection:** Select and send multiple files at once with live upload progress.
 
 ### 🔒 10-Day Auto-Delete & TTL Lifecycle (Room & Data Auto-Deletion)

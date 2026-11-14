@@ -13,6 +13,7 @@
     <meta name="author" content="Gaurav Kumar"/>
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
     <link rel="canonical" href="https://chatbharo.blogspot.com/"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- Open Graph / Facebook / WhatsApp Meta Tags -->
     <meta property="og:type" content="website"/>
@@ -1583,13 +1584,80 @@
             cursor: pointer;
             flex-shrink: 0;
             transition: all 0.2s;
+            outline: none;
         }
         .doc-upload-btn:hover {
             background: #19273f;
             color: white;
         }
-        #docFileInput {
+        #docFileInput, #folderFileInput {
             display: none;
+        }
+
+        /* ATTACHMENT ACTION MENU (FILES & FOLDERS) */
+        .attach-menu {
+            position: absolute;
+            bottom: calc(66px + var(--safe-bottom));
+            left: max(10px, var(--safe-left));
+            background: rgba(13, 27, 42, 0.96);
+            border: 1px solid #22385c;
+            border-radius: 18px;
+            padding: 6px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 260px;
+            max-width: calc(100vw - 28px);
+            animation: attachMenuPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes attachMenuPop {
+            from { transform: translateY(12px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .attach-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .attach-item:hover {
+            background: rgba(123, 47, 247, 0.18);
+        }
+        .attach-item:active {
+            background: rgba(123, 47, 247, 0.3);
+            transform: scale(0.98);
+        }
+        .attach-item-icon {
+            font-size: 24px;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+        .attach-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+        }
+        .attach-item-title {
+            font-size: 13.5px;
+            font-weight: bold;
+            color: #f1f5f9;
+        }
+        .attach-item-sub {
+            font-size: 10.5px;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         /* FILE ATTACHMENT CARD IN CHAT */
@@ -1680,7 +1748,7 @@
             <li>Instant Group Chat Rooms with Custom Room Codes</li>
             <li>High Definition HD Photo Upload &amp; Download</li>
             <li>Voice Notes &amp; Audio Messaging with built-in player</li>
-            <li>Universal File Sharing up to 25MB (PDF, APK, Video, Audio, Docs, Zip, Code &amp; Any File)</li>
+            <li>Universal File &amp; Folder Sharing up to 50MB (Folders, PDF, APK, Video, Audio, Docs, Zip, Code &amp; Any File)</li>
             <li>Emoji Reactions and WhatsApp-style Swipe to Reply</li>
             <li>Live Active Online Members Presence</li>
         </ul>
@@ -1768,16 +1836,34 @@
                 </div>
             </div>
 
+            <div id="attachMenu" class="attach-menu" style="display:none;" onclick="event.stopPropagation()">
+                <div class="attach-item" onclick="triggerFilePicker()">
+                    <span class="attach-item-icon">📄</span>
+                    <div class="attach-item-info">
+                        <div class="attach-item-title">Send Files</div>
+                        <div class="attach-item-sub">Any file, APK, Video, Audio, Docs (Max 50MB)</div>
+                    </div>
+                </div>
+                <div class="attach-item" onclick="triggerFolderPicker()">
+                    <span class="attach-item-icon">📁</span>
+                    <div class="attach-item-info">
+                        <div class="attach-item-title">Send Full Folder</div>
+                        <div class="attach-item-sub">Auto-packaged into ZIP (Max 50MB)</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="footer">
                 <div class="footer-actions-left">
                     <label class="upload" id="uploadLabel" title="Send Photo">
                         📷
                         <input type="file" id="imageInput" accept="image/*" multiple="multiple"/>
                     </label>
-                    <label class="doc-upload-btn" id="docUploadLabel" title="Send Any File (Max 25MB)">
+                    <button type="button" class="doc-upload-btn" id="docUploadBtn" onclick="toggleAttachMenu(event)" title="Attach Files or Folder (Max 50MB)">
                         📎
-                        <input type="file" id="docFileInput" multiple="multiple"/>
-                    </label>
+                    </button>
+                    <input type="file" id="docFileInput" multiple="multiple" style="display:none;"/>
+                    <input type="file" id="folderFileInput" webkitdirectory="webkitdirectory" directory="directory" multiple="multiple" style="display:none;"/>
                 </div>
                 <div class="input-pill-wrapper">
                     <button type="button" class="emoji-toggle-btn" onclick="toggleEmojiPicker(event)" title="Emojis">😊</button>
@@ -1965,6 +2051,45 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
         
         // Universal fallback for any other file
         return "📁";
+    }
+
+    /* ATTACHMENT MENU CONTROLS & ZIP PACKAGING SYSTEM */
+    window.toggleAttachMenu = (e) => {
+        if (e) e.stopPropagation();
+        const menu = document.getElementById("attachMenu");
+        if (!menu) return;
+        const isHidden = (menu.style.display === "none" || !menu.style.display);
+        const emojiPicker = document.getElementById("emojiPicker");
+        if (emojiPicker) emojiPicker.style.display = "none";
+        menu.style.display = isHidden ? "flex" : "none";
+    };
+
+    window.closeAttachMenu = () => {
+        const menu = document.getElementById("attachMenu");
+        if (menu) menu.style.display = "none";
+    };
+
+    window.triggerFilePicker = () => {
+        window.closeAttachMenu();
+        const input = document.getElementById("docFileInput");
+        if (input) input.click();
+    };
+
+    window.triggerFolderPicker = () => {
+        window.closeAttachMenu();
+        const input = document.getElementById("folderFileInput");
+        if (input) input.click();
+    };
+
+    function ensureJSZipLoaded() {
+        return new Promise((resolve, reject) => {
+            if (window.JSZip) return resolve(window.JSZip);
+            const script = document.createElement("script");
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+            script.onload = () => resolve(window.JSZip);
+            script.onerror = () => reject(new Error("Could not load folder archiver library"));
+            document.head.appendChild(script);
+        });
     }
 
     window.downloadAttachment = async (fileData, fileName) => {
@@ -2592,12 +2717,21 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
         if (picker && msgArea && msgArea.contains(e.target)) {
             picker.style.display = "none";
         }
+
+        const attachMenu = document.getElementById("attachMenu");
+        const attachBtn = document.getElementById("docUploadBtn");
+        if (attachMenu && attachMenu.style.display === "flex") {
+            if (!attachMenu.contains(e.target) && (!attachBtn || !attachBtn.contains(e.target))) {
+                attachMenu.style.display = "none";
+            }
+        }
     });
 
     document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
             window.closeImageViewer();
             window.closeActiveUsersModal();
+            window.closeAttachMenu();
         }
 
         if (e.key === "Enter" && !e.shiftKey) {
@@ -2979,12 +3113,12 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
                 </div>` : ""}
                 ${msg.fileData ? `
                 <div class="file-msg-card">
-                    <div class="file-icon-box">${getFileIcon(msg.fileName)}</div>
+                    <div class="file-icon-box">${msg.isFolder ? '📁' : getFileIcon(msg.fileName)}</div>
                     <div class="file-info-box">
                         <div class="file-name-text" title="${safe(msg.fileName)}">${safe(msg.fileName)}</div>
-                        <div class="file-meta-text">${safe(msg.fileSize || "")} • ${safe((msg.fileName ? msg.fileName.split('.').pop().toUpperCase() : 'FILE'))}</div>
+                        <div class="file-meta-text">${safe(msg.fileSize || "")} • ${msg.isFolder ? `FOLDER (${safe(msg.folderFileCount || "Multi")} files)` : safe((msg.fileName ? msg.fileName.split('.').pop().toUpperCase() : 'FILE'))}</div>
                     </div>
-                    <button class="file-download-btn" title="Download File">⬇</button>
+                    <button class="file-download-btn" title="Download ${msg.isFolder ? 'Folder' : 'File'}">⬇</button>
                 </div>` : ""}
                 ${renderReactionsHTML(msg.reactions, dataKey)}
             `;
@@ -3160,11 +3294,10 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
         msgInputEl.addEventListener("input", autoResizeTextarea);
         autoResizeTextarea();
 
-        document.getElementById("docFileInput").onchange = async (e) => {
-            const files = e.target.files;
+        const handleFilesUpload = async (files) => {
             if (!files || files.length === 0) return;
 
-            const maxLimit = 25 * 1024 * 1024; // 25 MB limit
+            const maxLimit = 50 * 1024 * 1024; // 50 MB limit
             const sendBtn = document.getElementById("sendBtn");
             const oldSendText = sendBtn.innerText;
             sendBtn.disabled = true;
@@ -3174,7 +3307,7 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 if (file.size > maxLimit) {
-                    window.showToast(`${file.name} exceeds 25MB limit! (${formatBytes(file.size)})`, "⚠️");
+                    window.showToast(`${file.name} exceeds 50MB limit! (${formatBytes(file.size)})`, "⚠️");
                     continue;
                 }
 
@@ -3193,6 +3326,7 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
                                 fileData: base64Data,
                                 fileName: file.name,
                                 fileSize: formatBytes(file.size),
+                                isFolder: false,
                                 time: getTime(),
                                 timestamp: Date.now(),
                                 replyTo: replyPayload,
@@ -3216,8 +3350,252 @@ import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/12.6.
 
             sendBtn.innerText = oldSendText;
             sendBtn.disabled = false;
+        };
+
+        document.getElementById("docFileInput").onchange = async (e) => {
+            await handleFilesUpload(e.target.files);
             e.target.value = "";
         };
+
+        document.getElementById("folderFileInput").onchange = async (e) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            const maxLimit = 50 * 1024 * 1024; // 50 MB limit
+            let totalSize = 0;
+            for (let i = 0; i < files.length; i++) {
+                totalSize += files[i].size;
+            }
+
+            if (totalSize > maxLimit) {
+                window.showToast(`Folder total size (${formatBytes(totalSize)}) exceeds 50MB limit!`, "⚠️");
+                e.target.value = "";
+                return;
+            }
+
+            let folderName = "folder";
+            if (files[0].webkitRelativePath) {
+                const parts = files[0].webkitRelativePath.split("/");
+                if (parts.length > 0 && parts[0]) {
+                    folderName = parts[0];
+                }
+            }
+
+            const sendBtn = document.getElementById("sendBtn");
+            const oldSendText = sendBtn.innerText;
+            sendBtn.disabled = true;
+            sendBtn.innerText = "📦 0%";
+            window.showToast(`Packaging "${folderName}" (${files.length} files)... ⏳`, "📦");
+
+            try {
+                await ensureJSZipLoaded();
+                const zip = new window.JSZip();
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const relPath = file.webkitRelativePath || file.name;
+                    zip.file(relPath, file);
+                }
+
+                const zipBlob = await zip.generateAsync({
+                    type: "blob",
+                    compression: "DEFLATE",
+                    compressionOptions: { level: 6 }
+                }, (metadata) => {
+                    sendBtn.innerText = `📦 ${Math.round(metadata.percent)}%`;
+                });
+
+                if (zipBlob.size > maxLimit) {
+                    window.showToast(`Compressed folder (${formatBytes(zipBlob.size)}) exceeds 50MB limit!`, "⚠️");
+                    sendBtn.innerText = oldSendText;
+                    sendBtn.disabled = false;
+                    e.target.value = "";
+                    return;
+                }
+
+                sendBtn.innerText = "⏳ Uploading";
+
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const base64Data = event.target.result;
+                    const roomRef = ref(db, "rooms/" + currentRoom + "/messages");
+                    let replyPayload = activeReplyData ? { name: activeReplyData.name, text: activeReplyData.text, key: activeReplyData.key } : null;
+
+                    try {
+                        await push(roomRef, {
+                            name: username,
+                            text: "",
+                            fileData: base64Data,
+                            fileName: `${folderName}.zip`,
+                            fileSize: formatBytes(zipBlob.size),
+                            isFolder: true,
+                            folderFileCount: files.length,
+                            time: getTime(),
+                            timestamp: Date.now(),
+                            replyTo: replyPayload,
+                            isDeleted: false,
+                            deletedBy: ""
+                        });
+                        update(ref(db, "rooms/" + currentRoom + "/info"), { lastActive: Date.now() }).catch(() => {});
+                        cancelReply();
+                        window.showToast(`Folder "${folderName}" sent!`, "📁");
+                    } catch(err) {
+                        window.showToast(`Failed to send folder: ${err.message}`, "❌");
+                    }
+
+                    sendBtn.innerText = oldSendText;
+                    sendBtn.disabled = false;
+                    e.target.value = "";
+                };
+                reader.readAsDataURL(zipBlob);
+            } catch (err) {
+                window.showToast("Folder archive error: " + err.message, "❌");
+                sendBtn.innerText = oldSendText;
+                sendBtn.disabled = false;
+                e.target.value = "";
+            }
+        };
+
+        // DRAG & DROP FOLDER AND FILE SUPPORT FOR CHAT
+        const chatArea = document.getElementById("chatPage");
+        if (chatArea) {
+            chatArea.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            async function readDirectoryEntries(dirEntry) {
+                const dirReader = dirEntry.createReader();
+                const entries = [];
+                let readEntries = await new Promise(resolve => dirReader.readEntries(resolve));
+                while (readEntries.length > 0) {
+                    entries.push(...readEntries);
+                    readEntries = await new Promise(resolve => dirReader.readEntries(resolve));
+                }
+                return entries;
+            }
+
+            async function collectFilesFromEntry(entry, path = "") {
+                const results = [];
+                if (entry.isFile) {
+                    const file = await new Promise((resolve) => entry.file(resolve));
+                    results.push({ file, path: path + file.name });
+                } else if (entry.isDirectory) {
+                    const entries = await readDirectoryEntries(entry);
+                    for (const child of entries) {
+                        const childFiles = await collectFilesFromEntry(child, path + entry.name + "/");
+                        results.push(...childFiles);
+                    }
+                }
+                return results;
+            }
+
+            chatArea.addEventListener("drop", async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!e.dataTransfer || !e.dataTransfer.items) return;
+
+                const items = e.dataTransfer.items;
+                const looseFiles = [];
+                const folderEntries = [];
+
+                for (let i = 0; i < items.length; i++) {
+                    const item = items[i];
+                    if (item.kind === "file") {
+                        const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+                        if (entry && entry.isDirectory) {
+                            folderEntries.push(entry);
+                        } else {
+                            const file = item.getAsFile();
+                            if (file) looseFiles.push(file);
+                        }
+                    }
+                }
+
+                if (looseFiles.length > 0) {
+                    await handleFilesUpload(looseFiles);
+                }
+
+                for (const dirEntry of folderEntries) {
+                    try {
+                        window.showToast(`Scanning folder "${dirEntry.name}"... ⏳`, "📁");
+                        const fileItems = await collectFilesFromEntry(dirEntry);
+                        if (fileItems.length === 0) continue;
+
+                        let totalSize = 0;
+                        for (let item of fileItems) totalSize += item.file.size;
+                        const maxLimit = 50 * 1024 * 1024;
+                        if (totalSize > maxLimit) {
+                            window.showToast(`Folder "${dirEntry.name}" (${formatBytes(totalSize)}) exceeds 50MB limit!`, "⚠️");
+                            continue;
+                        }
+
+                        await ensureJSZipLoaded();
+                        const zip = new window.JSZip();
+                        for (let item of fileItems) {
+                            zip.file(item.path, item.file);
+                        }
+
+                        const sendBtn = document.getElementById("sendBtn");
+                        const oldSendText = sendBtn.innerText;
+                        sendBtn.disabled = true;
+                        sendBtn.innerText = "📦 0%";
+
+                        const zipBlob = await zip.generateAsync({
+                            type: "blob",
+                            compression: "DEFLATE",
+                            compressionOptions: { level: 6 }
+                        }, (metadata) => {
+                            sendBtn.innerText = `📦 ${Math.round(metadata.percent)}%`;
+                        });
+
+                        if (zipBlob.size > maxLimit) {
+                            window.showToast(`Compressed folder exceeds 50MB limit!`, "⚠️");
+                            sendBtn.innerText = oldSendText;
+                            sendBtn.disabled = false;
+                            continue;
+                        }
+
+                        sendBtn.innerText = "⏳ Uploading";
+
+                        const reader = new FileReader();
+                        reader.onload = async (event) => {
+                            const base64Data = event.target.result;
+                            const roomRef = ref(db, "rooms/" + currentRoom + "/messages");
+                            let replyPayload = activeReplyData ? { name: activeReplyData.name, text: activeReplyData.text, key: activeReplyData.key } : null;
+
+                            try {
+                                await push(roomRef, {
+                                    name: username,
+                                    text: "",
+                                    fileData: base64Data,
+                                    fileName: `${dirEntry.name}.zip`,
+                                    fileSize: formatBytes(zipBlob.size),
+                                    isFolder: true,
+                                    folderFileCount: fileItems.length,
+                                    time: getTime(),
+                                    timestamp: Date.now(),
+                                    replyTo: replyPayload,
+                                    isDeleted: false,
+                                    deletedBy: ""
+                                });
+                                update(ref(db, "rooms/" + currentRoom + "/info"), { lastActive: Date.now() }).catch(() => {});
+                                cancelReply();
+                                window.showToast(`Folder "${dirEntry.name}" sent!`, "📁");
+                            } catch(err) {
+                                window.showToast(`Failed to send folder: ${err.message}`, "❌");
+                            }
+
+                            sendBtn.innerText = oldSendText;
+                            sendBtn.disabled = false;
+                        };
+                        reader.readAsDataURL(zipBlob);
+                    } catch(err) {
+                        window.showToast(`Error processing folder: ${err.message}`, "❌");
+                    }
+                }
+            });
+        }
 
         document.getElementById("imageInput").onchange = () => {
             const files = document.getElementById("imageInput").files;
