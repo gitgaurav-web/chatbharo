@@ -49,7 +49,7 @@ A high-performance, mobile-first **Realtime Chat Web Application** engineered wi
 - **🕒 Clock Icon (Sending):** Displayed beside the message timestamp while text, voice notes, or large 50MB files/folders are uploading.
 - **✓ Single Grey Tick (Sent):** Confirms the message has successfully reached Firebase Realtime Database.
 - **✓✓ Double Grey Tick (Delivered):** Confirms the message has reached other members in the room.
-- **✓✓ Double Blue Tick (Seen / Read):** WhatsApp signature cyan/blue tick (`#53bdeb`) automatically turns on when other participants view the chat!
+- **✓✓ Double Red Tick (Seen / Read):** Vibrant glowing red tick (`#ff334b`) automatically turns on when other participants view/read the chat!
 
 ### 🎙️ High-Fidelity Voice Notes (MediaRecorder API)
 - **Built-in Audio Recorder:** One-tap voice recording with live duration timer (`0:05`), pulsing red indicator, and cancel/send controls.

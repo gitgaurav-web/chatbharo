@@ -572,7 +572,8 @@
         }
 
         .msg-status-tick.tick-seen {
-            color: #53bdeb; /* Exact WhatsApp Cyan/Blue Checkmark */
+            color: #ff334b; /* Vibrant Red Read/Seen Double Checkmark */
+            filter: drop-shadow(0 0 3px rgba(255, 51, 75, 0.45));
         }
 
         /* NAME */
